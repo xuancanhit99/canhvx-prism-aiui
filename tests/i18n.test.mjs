@@ -15,15 +15,18 @@ import {
   t,
   buildTextMap,
   speechLang,
-  isSupportedLocale
+  isSupportedLocale,
+  initI18n,
+  LOCALE_STORAGE_KEY
 } from '../lib/prism-i18n.js';
 
 const zhKeys = Object.keys(PACKS['zh-CN']).sort();
 
-test('four first-phase locales ship packs with identical keys', () => {
-  assert.deepEqual(LOCALE_IDS, ['zh-CN', 'en-US', 'ja-JP', 'zh-Hant']);
+test('all locales ship packs with identical keys', () => {
+  assert.deepEqual(LOCALE_IDS, ['zh-CN', 'en-US', 'ja-JP', 'zh-Hant', 'vi-VN']);
   for (const id of LOCALE_IDS) {
     assert.equal(Object.keys(PACKS[id]).length, zhKeys.length, `${id} covers every source key`);
+    assert.deepEqual(Object.keys(PACKS[id]).sort(), zhKeys, `${id} uses the same keys`);
   }
 });
 
@@ -49,6 +52,8 @@ test('matchLocale maps BCP 47 tag variants onto the supported set', () => {
   assert.equal(matchLocale('ja-JP'), 'ja-JP');
   assert.equal(matchLocale('en'), 'en-US');
   assert.equal(matchLocale('en-GB'), 'en-US');
+  assert.equal(matchLocale('vi'), 'vi-VN');
+  assert.equal(matchLocale('vi_VN'), 'vi-VN');
   assert.equal(matchLocale('fr-FR'), null);
   assert.equal(matchLocale(''), null);
 });
@@ -80,8 +85,38 @@ test('localeForRegion accepts BCP 47 tags and bare region subtags', () => {
   assert.equal(localeForRegion('CN'), 'zh-CN');
   assert.equal(localeForRegion('US'), 'en-US');
   assert.equal(localeForRegion('GB'), 'en-US');
+  assert.equal(localeForRegion('VN'), 'vi-VN');
   assert.equal(localeForRegion('DE'), null);
   assert.equal(localeForRegion(''), null);
+});
+
+test('a Vietnamese launch persists only the app locale and English remains selectable', () => {
+  const storage = new Map();
+  const wx = {
+    getStorageSync: (key) => storage.get(key),
+    setStorageSync: (key, value) => storage.set(key, value)
+  };
+  const nav = { languages: ['zh-CN'] };
+  try {
+    assert.equal(initI18n({ wx, navigator: nav, locale: 'vi-VN' }), 'vi-VN');
+    assert.equal(storage.get(LOCALE_STORAGE_KEY), 'vi-VN');
+    assert.equal(initI18n({ wx, navigator: nav }), 'vi-VN');
+    assert.equal(t('menu.voiceInput'), 'Giọng nói');
+    assert.equal(t('chat.unreadPrefix'), ' tin mới | ');
+    assert.equal(speechLang(), 'vi-VN');
+    assert.equal(initI18n({ wx, navigator: nav, locale: 'en-US' }), 'en-US');
+    assert.equal(t('menu.voiceInput'), 'Voice input');
+    assert.equal(initI18n({ wx, navigator: nav, locale: 'auto' }), 'zh-CN');
+  } finally {
+    storage.clear();
+    initI18n({ wx, navigator: nav });
+  }
+});
+
+test('Vietnamese UI labels contain no untranslated Han characters', () => {
+  for (const [key, value] of Object.entries(PACKS['vi-VN'])) {
+    assert.doesNotMatch(value, /\p{Script=Han}/u, key);
+  }
 });
 
 test('detectLocale prefers the stored override, then navigator languages, then region', () => {

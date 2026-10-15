@@ -124,7 +124,7 @@ export default {
     exitPending: false
   },
 
-  onLoad() {
+  onLoad(params = {}) {
     // Build marker: grep this tag in logcat to confirm which build the page
     // instance is actually serving.
     console.log('[PrismAIUI]', JSON.stringify({ event: 'build.tag', tag: '20261013-realdevice-debug' }));
@@ -132,7 +132,7 @@ export default {
     wx.setBackgroundColor({ backgroundColor: '#000000' });
     // Locale first: every later label read (welcome message, menu, hints)
     // must resolve against the finalized language.
-    initI18n({ wx });
+    initI18n({ wx, locale: params && params.locale });
     // The welcome message is translated, so the boot state is rebuilt here
     // (after initI18n) instead of freezing the module-level zh-CN constants.
     const initialChatState = buildInitialChatState();

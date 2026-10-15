@@ -1,0 +1,12 @@
+{
+  "widgets": {
+    "widgets/prism-usage/index": {
+      "displayName": "Hạn mức Prism",
+      "description": "Hạn mức 5 giờ và hằng tuần của các Agent"
+    },
+    "widgets/prism-conversations/index": {
+      "displayName": "Hội thoại Prism",
+      "description": "Hội thoại gần đây, đang chạy và chưa đọc"
+    }
+  }
+}

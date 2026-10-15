@@ -15,6 +15,7 @@ docs/**
 tests/
 dev/**
 README.md
+VIETNAMESE.md
 package.json
 skills-lock.json
 
